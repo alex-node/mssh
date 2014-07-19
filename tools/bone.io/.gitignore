@@ -1,0 +1,7 @@
+
+node_modules
+compiled
+*.swo
+*.swp
+*.swn
+*.swm

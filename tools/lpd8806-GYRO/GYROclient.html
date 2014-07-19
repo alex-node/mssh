@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+
+    <title>GYRO SERVER</title>
+       <!--local jquery -->
+    <link rel="stylesheet" href="css/jquery-ui.css">
+    <script type='text/javascript' src="js/jquery-1.10.2.min.js"></script>
+    <script type='text/javascript' src="js/jquery-ui.js"></script>
+    <!--local terminal and jquery mouswheel plugin -->
+    <script type='text/javascript' src="js/jquery.mousewheel.js"></script>
+   
+   <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="/bone.io/bone.io.js"></script>
+    <!--gyro.js http://tomg.co/gyrojs -->
+    <script type='text/javascript' src="js/gyro.js"></script>
+    
+<style>
+        html 
+        {         
+                    background-color: #262626;}
+        body 
+        {                            
+	                background-color: transparent;
+                    color:#595540;
+		            font-family: monospace;
+		            font-size: 8pt;
+		            padding: 0px 0 0px;
+		            
+                    scrollbar-base-color: #595540;
+                    scrollbar-3dlight-color: #595540;
+                    scrollbar-highlight-color: #595540;
+                    scrollbar-track-color: #262626;
+                    scrollbar-arrow-color: #cc8139;
+                    scrollbar-shadow-color: #595540;
+                    scrollbar-dark-shadow-color: #595540;}	
+        .gyro-button  
+        {           cursor:pointer;
+                    border-radius:5px;
+                    width: 50px;
+                    height:50px;
+                    float:left;
+                    overflow:hidden;
+                    background-position:7px 5px;
+                    background-size: 100% 100%;
+                    margin-top:5px;
+                    background-repeat:no-repeat;
+                    padding-left: 0px; } 
+</style>
+</head>
+<body >
+<div id="on_off"   class="gyro-button" style='background-image: url("images/gyro-cc8139.svg");' ></div>
+</body>
+<script type='text/javascript'>
+    $('#on_off').click(function () { active = (!active); GYRO_SERVER.activate(active); });
+    var active = false;
+    socket = io.connect();
+    bone.set('io.options', { socket: socket });
+
+    var GYRO_SERVER = bone.io('gyro', {
+        outbound: {
+            routes: ['data', 'activate']
+        },
+        inbound: {
+            data: function (data, context) {
+                //console.log(data);
+            }
+        }
+    });
+
+    var last = {};
+    last.c = 0;
+    last.led_Index = 16;
+    gyro.frequency = 50;//5ms
+    gyro.startTracking(function (o) {
+        // o.x, o.y, o.z for accelerometer
+        // o.alpha, o.beta, o.gamma for gyro
+        var roll = (o.gamma / 360);//0 <-> +360
+        var pitch = (o.beta / 360);//-180 <-> +180
+
+        var c = Math.abs(parseInt(384 * roll)); // color wheel
+        var led_Index = ((parseInt(32 * pitch)) * 2) + 16;
+
+        if (last.c != c || last.led_Index != led_Index) {
+            GYRO_SERVER.data(o);
+        }
+        last.c = c;
+        last.led_Index = led_Index;
+
+    });
+
+</script>
+</html>
